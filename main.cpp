@@ -63,8 +63,7 @@ int main(int argc, char *argv[])
     struct ether_header eth;    /* Initialize Ethernet Structure */
     unsigned char buff, array[1500];
     
-
-    input = fopen("100Packets.pcap", "rb"); /* Open Input File */
+    input = fopen("1000Packets.pcap", "rb"); /* Open Input File */
     output = fopen("xyz.pcap", "wb");
     if (fopen == NULL)
         cout << "Cannot open saved windump file" << endl;
@@ -118,7 +117,6 @@ int main(int argc, char *argv[])
             printf("\n\n=== OUTPUT ===\n\n");
             cout << "Ethernet Type: " << eth.etype << "\n";
             cout << "caplen: " << tt.caplen << "\n";
-            vector<unsigned char> v;
             // Remainder of data (layer 3, layer 4, layer 5)
             // Read from buffer
             // Initialize to avoid garbage values
@@ -128,12 +126,8 @@ int main(int argc, char *argv[])
                 fread((char *)&buff, sizeof(buff), 1, input);
                 printf("%x ", buff); // you may remove the printf line if neccessary
                 array[i] = buff;
-                v.push_back(buff); 
             }
             cout << "\n";
-
-
-            // write buffer to file
 
             printf("\n\n");
             // *********************** FOR ASSIGNMENT NOT INVOLVING WRITING BACK TO A FILE ******
@@ -142,28 +136,21 @@ int main(int argc, char *argv[])
             // ****Nevertheless, in some of the questions you may need to add some code
             //  ** elsewhere in the program. ********************
             //  ......  Your Code
-            fwrite(&tt, sizeof(tt), 1, output);
-            fwrite(&eth, sizeof(eth), 1, output);
-            for (int i = 0; i < tt.caplen - 14; i++) {
-                fwrite(&array[i], sizeof(unsigned char), 1, output);
-            }
+
             // For each buffer, write to file
-
-
-            // filter out ipv6 packets only
-            // for(int i = 0; i < v.size(); i++) {
-            //     printf("int %d hex: %x dec: %d\n", i, v[i], v[i]);
-            // }
-            // if (eth.etype == )
-            printf("Source IP: %d.%d.%d.%d\n", v[12], v[13], v[14], v[15]);
-            printf("Destination IP: %d.%d.%d.%d\n", v[16], v[17], v[18], v[19]);
-            cout << (((int)v[12]) == 197) << "\n";
-            
-            // 0.0.0.0 - 127.255.255.255. 
-            if (((int)v[12] <= 127) && ((int)v[16] <= 127)) {
+            // 0.x.x.x - 127.x.x.x
+            // Capture only source IPv4 address that belong to Class A only 
+            // Capture Destination IP address that belong to Class A only  
+            // if source lte 127 && dst lte 127 && ipv4
+            // if (((int)array[12] <= 127) && ((int)array[16] <= 127) && (eth.etype == 8))
+            if (((int)array[12] <= 127) && ((int)array[16] <= 127) && (eth.etype == 8)) {
                 cout << "Source IP and Destination IP is class A" << "\n";
+                fwrite(&tt, sizeof(tt), 1, output);
+                fwrite(&eth, sizeof(eth), 1, output);
+                for (int i = 0; i < tt.caplen - 14; i++) {
+                    fwrite(&array[i], sizeof(unsigned char), 1, output);
+                }
             }
-
             
             //  ****** END OF MODIFICATION HERE **********************
             //  WARNING: Try not to modify the while loop , the fread statement as you may affect
