@@ -1,0 +1,7 @@
+(1211201568 - 28) = 1211201540
+1211201540 % 20 = 0
+
+1. Read the input file abc.pcap
+2. Capture only source IPv4 address that belong to Class A only 
+3. Capture Destination IP address that belong to Class A only  
+4. store the output file xyz.pcap 
