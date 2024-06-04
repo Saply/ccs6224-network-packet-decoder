@@ -50,19 +50,6 @@ typedef struct ether_header
     unsigned short etype;               /* Ethernet Protocol Type (Ethertype) 2 bytes */
 } eth;
 
-// Layer 3 header (Network layer)
-typedef struct ip_header {
-    unsigned char ip_version:4, ip_length:4;
-    unsigned char ip_tos;
-    unsigned short ip_len;
-    unsigned short ip_offset;
-    unsigned char ttl;
-    unsigned short checksum;
-    unsigned int ip_src;
-    unsigned int ip_dst;
-} ip;
-
-// Layer 3 information
 
 int main(int argc, char *argv[])
 {
@@ -74,11 +61,10 @@ int main(int argc, char *argv[])
     struct packet_header hdr;   /* Initialize Packet Header Structure */
     struct packet_timestamp tt; /* Initialize Timestamp Structure */
     struct ether_header eth;    /* Initialize Ethernet Structure */
-    struct ip_header ip_hdr;
     unsigned char buff, array[1500];
     
 
-    input = fopen("5Packets.pcap", "rb"); /* Open Input File */
+    input = fopen("100Packets.pcap", "rb"); /* Open Input File */
     output = fopen("xyz.pcap", "wb");
     if (fopen == NULL)
         cout << "Cannot open saved windump file" << endl;
@@ -135,13 +121,18 @@ int main(int argc, char *argv[])
             vector<unsigned char> v;
             // Remainder of data (layer 3, layer 4, layer 5)
             // Read from buffer
-            for (i = 0; i < tt.caplen - 14; i++)
+            // Initialize to avoid garbage values
+
+            for (int i = 0; i < tt.caplen - 14; i++)
             {
                 fread((char *)&buff, sizeof(buff), 1, input);
                 printf("%x ", buff); // you may remove the printf line if neccessary
                 array[i] = buff;
-                v.push_back(buff);
+                v.push_back(buff); 
             }
+            cout << "\n";
+
+
             // write buffer to file
 
             printf("\n\n");
@@ -153,15 +144,17 @@ int main(int argc, char *argv[])
             //  ......  Your Code
             fwrite(&tt, sizeof(tt), 1, output);
             fwrite(&eth, sizeof(eth), 1, output);
-            // fwrite(array, sizeof(unsigned char), sizeof(array), output);
+            for (int i = 0; i < tt.caplen - 14; i++) {
+                fwrite(&array[i], sizeof(unsigned char), 1, output);
+            }
+            // For each buffer, write to file
+
 
             // filter out ipv6 packets only
             // for(int i = 0; i < v.size(); i++) {
             //     printf("int %d hex: %x dec: %d\n", i, v[i], v[i]);
             // }
             // if (eth.etype == )
-            cout << "Total length:" << (int)v[2] << "\n";
-            printf("IP Version: %d\nIHL: %d\nTOS: %d\nTotal length: %d\n", v[2], v[2], v[1], v[0]);
             printf("Source IP: %d.%d.%d.%d\n", v[12], v[13], v[14], v[15]);
             printf("Destination IP: %d.%d.%d.%d\n", v[16], v[17], v[18], v[19]);
             cout << (((int)v[12]) == 197) << "\n";
