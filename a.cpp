@@ -12,43 +12,37 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
-
 using namespace std;
 
 FILE *input;
-FILE *output;
+FILE* output;
 
-// Global pcap header
 typedef struct packet_header
 {
-    unsigned int magic;           /* Tcpdump Magic Number 4 bytes	*/
-    unsigned short version_major; /* Tcpdump Version Major 2 bytes */
-    unsigned short version_minor; /* Tcpdump Version Minor 2 bytes */
-    unsigned int thiszone;        /* GMT to Local Correction 4 bytes */
-    unsigned int sigfigs;         /* Accuracy of timestamps 4 bytes */
-    unsigned int snaplen;         /* Max Length of Portion of Saved Packet 4 bytes */
-    unsigned int linktype;        /* Data Link Type 4 bytes */
-    // total of 22 bytes
+    unsigned int magic;           /* Tcpdump Magic Number	*/
+    unsigned short version_major; /* Tcpdump Version Major */
+    unsigned short version_minor; /* Tcpdump Version Minor */
+    unsigned int thiszone;        /* GMT to Local Correction */
+    unsigned int sigfigs;         /* Accuracy of timestamps */
+    unsigned int snaplen;         /* Max Length of Portion of Saved Packet */
+    unsigned int linktype;        /* Data Link Type */
 } hdr;
 
-// Timestamps and packet length
 typedef struct packet_timestamp
 {
-    unsigned int tv_sec;  /* Timestamp in Seconds 4 bytes*/
-    unsigned int tv_usec; /* Timestamp in Micro Seconds 4 bytes*/
+    unsigned int tv_sec;  /* Timestamp in Seconds */
+    unsigned int tv_usec; /* Timestamp in Micro Seconds */
     /* Total Length of Packet Portion (Ethernet Length until the End of Each Packet) */
-    unsigned int caplen; // Length of  
+    unsigned int caplen;
     unsigned int len; /* Length of the Packet (Off Wire) */
 } tt;
 
-// Layer 2 information (Ethernet frame)
 typedef struct ether_header
 {
-    unsigned char edst[ETHER_ADDR_LEN]; /* Ethernet Destination Address, char is 1 byte*/
-    unsigned char esrc[ETHER_ADDR_LEN]; /* Ethernet Source Address, char is 1 byte */
-    unsigned short etype;               /* Ethernet Protocol Type (Ethertype) 2 bytes */
+    unsigned char edst[ETHER_ADDR_LEN]; /* Ethernet Destination Address */
+    unsigned char esrc[ETHER_ADDR_LEN]; /* Ethernet Source Address */
+    unsigned short etype;               /* Ethernet Protocol Type */
 } eth;
-
 
 int main(int argc, char *argv[])
 {
@@ -61,16 +55,15 @@ int main(int argc, char *argv[])
     struct packet_timestamp tt; /* Initialize Timestamp Structure */
     struct ether_header eth;    /* Initialize Ethernet Structure */
     unsigned char buff, array[1500];
-    
+
     input = fopen("1000Packets.pcap", "rb"); /* Open Input File */
-    output = fopen("xyz.pcap", "wb");
+    output = fopen("xyzzzzz.pcap", "wb");
     if (fopen == NULL)
         cout << "Cannot open saved windump file" << endl;
     else
     {
-        // The first part of the file stores the tcpdump information header. This header records the tcpdump information (network analyzer information) such as time stamp accuracy, datalink type etc.
         fread((char *)&hdr, sizeof(hdr), 1, input); /* Read & Display Packet Header Information */
-        // size_t fread(void *__restrict__ _DstBuf,,, size_t _ElementSize,,, size_t _Count,,, FILE *__restrict__ _File)
+
         cout << "\n********** ********** PACKET HEADER ********** ***********" << endl;
         cout << "Preamble " << endl;
         cout << "Packet Header Length : " << sizeof(hdr) << endl;
@@ -82,17 +75,14 @@ int main(int argc, char *argv[])
         cout << "Accuracy to Timestamp   :  " << hdr.sigfigs << endl;
         cout << "Data Link Type (Ethernet Type II = 1)  : " << hdr.linktype << endl;
 
-        // size_t fwrite(const void *__restrict__ _Str, size_t _Size, size_t _Count, FILE *__restrict__ _File)
-        // Write global header to pcap file
-        fwrite(&hdr, sizeof(hdr), 1, output);
-
         /* Use While Loop to Set the Packet Boundary */
         while (fread((char *)&tt, sizeof(tt), 1, input)) /* Read & Display Timestamp Information */
         {
             ++count;
+
             cout << "********** ********** TIMESTAMP & ETHERNET FRAME ********** ***********" << endl;
-            cout << "Packet Number: " << count << endl; /* Display Packet Number */
-            cout << "The Packets  are Captured in : " << tt.tv_sec << " Seconds" << endl;
+            cout << " Packet Number: " << count << endl; /* Display Packet Number */
+            cout << " The Packets  are Captured in : " << tt.tv_sec << " Seconds" << endl;
             cout << "The Packets  are Captured in : " << tt.tv_usec << " Micro-seconds" << endl;
 
             /* Use caplen to Find the Remaining Data Segment */
@@ -100,7 +90,7 @@ int main(int argc, char *argv[])
             cout << "Packet Length (Off Wire): " << tt.len << "Bytes" << endl;
 
             fread((char *)&eth, sizeof(eth), 1, input); /* Read & display ethernet header information */
-            cout << "Ethernet Header Length  : " << sizeof(eth) << " bytes" << endl; // It's always the same size amuwaus wtf
+            cout << "Ethernet Header Length  : " << sizeof(eth) << " bytes" << endl;
 
             // You may want to remove the  MAC Address output in your code
             printf("MAC Destination Address	: [hex] %x :%x :%x :%x :%x :%x \n\t\t\t  [dec] %d :%d :%d :%d :%d :%d\n",
@@ -114,14 +104,14 @@ int main(int argc, char *argv[])
                    eth.esrc[2], eth.esrc[3], eth.esrc[4], eth.esrc[5]);
 
             printf("\n\n C Cout\n\n");
+            cout << "MAC Address " << eth.esrc[0] << " " << eth.esrc[1] << endl;
 
-            // Remainder of data (layer 3, layer 4, layer 5)
-            // Read from buffer
+            fwrite(&hdr, sizeof(hdr), 1, output);
 
-            for (int i = 0; i < tt.caplen - 14; i++)
+            for (i = 0; i < tt.caplen - 14; i++)
             {
                 fread((char *)&buff, sizeof(buff), 1, input);
-                printf("%x ", buff); // you may remove the printf line if neccessary
+                printf(" %x", buff); // you may remove the printf line if neccessary
                 array[i] = buff;
             }
 
@@ -132,12 +122,6 @@ int main(int argc, char *argv[])
             //  ** elsewhere in the program. ********************
             //  ......  Your Code
 
-            // For each buffer, write to file
-            // 0.x.x.x - 127.x.x.x
-            // Capture only source IPv4 address that belong to Class A only 
-            // Capture Destination IP address that belong to Class A only  
-            // if source lte 127 && dst lte 127 && ipv4
-            // if (((int)array[12] <= 127) && ((int)array[16] <= 127) && (eth.etype == 8))
             if (((int)array[12] <= 127) && ((int)array[16] <= 127) && (eth.etype == 8)) {
                 cout << "Source IP and Destination IP is class A" << "\n";
                 fwrite(&tt, sizeof(tt), 1, output);
@@ -146,7 +130,8 @@ int main(int argc, char *argv[])
                     fwrite(&array[i], sizeof(unsigned char), 1, output);
                 }
             }
-            
+
+
             //  ****** END OF MODIFICATION HERE **********************
             //  WARNING: Try not to modify the while loop , the fread statement as you may affect
             //  the packet boundary and the whole program may not work after that.
@@ -157,7 +142,7 @@ int main(int argc, char *argv[])
     }     // end main else
 
     fclose(input); // Close input file
-    fclose(output); // Close output file
+    fclose(output);
 
     return (0);
 }
