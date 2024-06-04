@@ -15,10 +15,11 @@
 using namespace std;
 
 FILE *input;
+FILE *output;
 
 typedef struct packet_header
 {
-    unsigned int magic;           /* Tcpdump Magic Number	*/
+    unsigned int magic;           /* Tcpdump Magic Number   */
     unsigned short version_major; /* Tcpdump Version Major */
     unsigned short version_minor; /* Tcpdump Version Minor */
     unsigned int thiszone;        /* GMT to Local Correction */
@@ -55,7 +56,8 @@ int main(int argc, char *argv[])
     struct ether_header eth;    /* Initialize Ethernet Structure */
     unsigned char buff, array[1500];
 
-    input = fopen("abc", "rb"); /* Open Input File */
+    input = fopen("1000Packets.pcap", "rb"); /* Open Input File */
+    output = fopen("xyz.pcap", "wb");
     if (fopen == NULL)
         cout << "Cannot open saved windump file" << endl;
     else
@@ -73,6 +75,7 @@ int main(int argc, char *argv[])
         cout << "Accuracy to Timestamp   :  " << hdr.sigfigs << endl;
         cout << "Data Link Type (Ethernet Type II = 1)  : " << hdr.linktype << endl;
 
+        fwrite(&hdr, sizeof(hdr), 1, output);
         /* Use While Loop to Set the Packet Boundary */
         while (fread((char *)&tt, sizeof(tt), 1, input)) /* Read & Display Timestamp Information */
         {
@@ -91,12 +94,12 @@ int main(int argc, char *argv[])
             cout << "Ethernet Header Length  : " << sizeof(eth) << " bytes" << endl;
 
             // You may want to remove the  MAC Address output in your code
-            printf("MAC Destination Address	: [hex] %x :%x :%x :%x :%x :%x \n\t\t\t  [dec] %d :%d :%d :%d :%d :%d\n",
+            printf("MAC Destination Address : [hex] %x :%x :%x :%x :%x :%x \n\t\t\t  [dec] %d :%d :%d :%d :%d :%d\n",
                    eth.edst[0], eth.edst[1],
                    eth.edst[2], eth.edst[3], eth.edst[4], eth.edst[5], eth.edst[0], eth.edst[1],
                    eth.edst[2], eth.edst[3], eth.edst[4], eth.edst[5], eth.edst[6]);
 
-            printf("MAC Source Address	: [hex] %x :%x :%x :%x :%x :%x \n\t\t\t  [dec] %d :%d :%d :%d :%d :%d\n",
+            printf("MAC Source Address  : [hex] %x :%x :%x :%x :%x :%x \n\t\t\t  [dec] %d :%d :%d :%d :%d :%d\n",
                    eth.esrc[0], eth.esrc[1], eth.esrc[2],
                    eth.esrc[3], eth.esrc[4], eth.esrc[5], eth.esrc[0], eth.esrc[1],
                    eth.esrc[2], eth.esrc[3], eth.esrc[4], eth.esrc[5]);
@@ -117,6 +120,17 @@ int main(int argc, char *argv[])
             // ****Nevertheless, in some of the questions you may need to add some code
             //  ** elsewhere in the program. ********************
             //  ......  Your Code
+            if (((int)array[12] <= 127) && ((int)array[16] <= 127) && (eth.etype == 8))
+            {
+                cout << "Source IP and Destination IP is class A"
+                     << "\n";
+                fwrite(&tt, sizeof(tt), 1, output);
+                fwrite(&eth, sizeof(eth), 1, output);
+                for (int i = 0; i < tt.caplen - 14; i++)
+                {
+                    fwrite(&array[i], sizeof(unsigned char), 1, output);
+                }
+            }
 
             //  ****** END OF MODIFICATION HERE **********************
             //  WARNING: Try not to modify the while loop , the fread statement as you may affect
@@ -127,7 +141,8 @@ int main(int argc, char *argv[])
         } // end while
     }     // end main else
 
-    fclose(input); // Close input file
+    fclose(input);  // Close input file
+    fclose(output); // Close output file
 
     return (0);
 }
